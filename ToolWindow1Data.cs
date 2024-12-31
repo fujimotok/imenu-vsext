@@ -1,6 +1,9 @@
 ﻿using Microsoft.VisualStudio.Extensibility.UI;
+using System;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
+using System.Windows;
+using System.Windows.Media;
 
 namespace Imenu
 {
@@ -12,6 +15,11 @@ namespace Imenu
     {
         public ToolWindow1Data()
         {
+            this.JumpCommand = new AsyncCommand(async (parameter, cancellationToken) =>
+            {
+                MessageBox.Show("hello!");
+            });
+
             this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 1 });
             this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 2 });
             this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 3 });
@@ -35,5 +43,7 @@ namespace Imenu
             set => SetProperty(ref this._imenuItems, value);
         }
 
+        [DataMember]
+        public AsyncCommand JumpCommand { get; private set; }
     }
 }

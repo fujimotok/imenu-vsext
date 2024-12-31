@@ -12,14 +12,25 @@
         </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!--
+        普通のWPFと違う書き方があるので注意
+        https://learn.microsoft.com/en-us/visualstudio/extensibility/visualstudio.extensibility/inside-the-sdk/advanced-remote-ui?view=vs-2022
+        -->
+
         <DockPanel Grid.Row="0">
-            <Label Content="imenu:" DockPanel.Dock="Left"/>
-            <TextBox Text="{Binding Text}" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+            <Label Content="imenu:" DockPanel.Dock="Left" />
+            <TextBox Text="{Binding Text}" DockPanel.Dock="Right" VerticalAlignment="Center" />
         </DockPanel>
         <ListView Grid.Row="1" ItemsSource="{Binding ImenuItems}">
+            <vs:ExtensibilityUICommands.EventHandlers>
+                <vs:EventHandlerCollection>
+                    <vs:EventHandler Event="MouseDoubleClick"
+                                 Command="{Binding JumpCommand}" />
+                </vs:EventHandlerCollection>
+            </vs:ExtensibilityUICommands.EventHandlers>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
