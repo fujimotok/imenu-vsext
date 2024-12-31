@@ -24,7 +24,7 @@
             <Label Content="imenu:" DockPanel.Dock="Left" />
             <TextBox Text="{Binding Text}" DockPanel.Dock="Right" VerticalAlignment="Center" />
         </DockPanel>
-        <ListView Grid.Row="1" ItemsSource="{Binding ImenuItems}">
+        <ListView Grid.Row="1" ItemsSource="{Binding ImenuItems}" SelectedItem="{Binding SelectedItem}">
             <vs:ExtensibilityUICommands.EventHandlers>
                 <vs:EventHandlerCollection>
                     <vs:EventHandler Event="MouseDoubleClick"

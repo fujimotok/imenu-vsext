@@ -15,10 +15,7 @@ namespace Imenu
     {
         public ToolWindow1Data()
         {
-            this.JumpCommand = new AsyncCommand(async (parameter, cancellationToken) =>
-            {
-                MessageBox.Show("hello!");
-            });
+            this.JumpCommand = new AsyncCommand(this.JumpExecuteAsync);
 
             this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 1 });
             this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 2 });
@@ -35,6 +32,14 @@ namespace Imenu
             set => SetProperty(ref this._text, value);
         }
 
+        private ImenuItem? _selectedItem = null;
+        [DataMember]
+        public ImenuItem? SelectedItem
+        {
+            get => _selectedItem;
+            set => SetProperty(ref this._selectedItem, value);
+        }
+
         private ObservableCollection<ImenuItem> _imenuItems = new ObservableCollection<ImenuItem>();
         [DataMember]
         public ObservableCollection<ImenuItem> ImenuItems
@@ -45,5 +50,12 @@ namespace Imenu
 
         [DataMember]
         public AsyncCommand JumpCommand { get; private set; }
+
+        private Task JumpExecuteAsync(object? parameter, CancellationToken token)
+        {
+            MessageBox.Show($"hello! {SelectedItem?.Line ?? 0}");
+
+            return Task.CompletedTask;
+        }
     }
 }
