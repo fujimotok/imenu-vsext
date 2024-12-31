@@ -8,6 +8,12 @@
 
     <VssdkCompatibleExtension>true</VssdkCompatibleExtension>
   </PropertyGroup>
+  <ItemGroup>
+    <Page Remove="ToolWindow1Content.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ToolWindow1Content.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.9.2092" />
