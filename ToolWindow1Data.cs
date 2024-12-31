@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.Extensibility.UI;
+using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 
 namespace Imenu
@@ -11,19 +12,11 @@ namespace Imenu
     {
         public ToolWindow1Data()
         {
-            HelloCommand = new AsyncCommand((parameter, clientContext, cancellationToken) =>
-            {
-                Text = $"Hello {parameter as string}!";
-                return Task.CompletedTask;
-            });
-        }
-
-        private string _name = string.Empty;
-        [DataMember]
-        public string Name
-        {
-            get => _name;
-            set => SetProperty(ref this._name, value);
+            this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 1 });
+            this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 2 });
+            this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 3 });
+            this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 4 });
+            this.ImenuItems.Add(new ImenuItem() { Name = "item1", Line = 5 });
         }
 
         private string _text = string.Empty;
@@ -34,7 +27,13 @@ namespace Imenu
             set => SetProperty(ref this._text, value);
         }
 
+        private ObservableCollection<ImenuItem> _imenuItems = new ObservableCollection<ImenuItem>();
         [DataMember]
-        public AsyncCommand HelloCommand { get; }
+        public ObservableCollection<ImenuItem> ImenuItems
+        {
+            get => _imenuItems;
+            set => SetProperty(ref this._imenuItems, value);
+        }
+
     }
 }

@@ -3,27 +3,28 @@
               xmlns:vs="http://schemas.microsoft.com/visualstudio/extensibility/2022/xaml"
               xmlns:styles="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
               xmlns:colors="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0">
-  <Grid>
-    <Grid.Resources>
-      <Style TargetType="Label" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogLabelStyleKey}}" />
-      <Style TargetType="TextBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.TextBoxStyleKey}}" />
-      <Style TargetType="Button" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ButtonStyleKey}}" />
-      <Style TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static styles:VsBrushes.WindowTextKey}}" />
-      </Style>
-    </Grid.Resources>
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="Auto" />
-      <ColumnDefinition Width="*" />
-      <ColumnDefinition Width="Auto" />
-    </Grid.ColumnDefinitions>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
-    <Label Content="Name:" />
-    <TextBox Text="{Binding Name}" Grid.Column="1" />
-    <Button Content="Say Hello" Command="{Binding HelloCommand}" CommandParameter="{Binding Name}" IsEnabled="{Binding HelloCommand.RunningCommandsCount.IsZero}" Grid.Column="2" />
-    <TextBlock Text="{Binding Text}" Grid.ColumnSpan="2" Grid.Row="1" />
-  </Grid>
+    <Grid>
+        <Grid.Resources>
+            <Style TargetType="Label" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogLabelStyleKey}}" />
+            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogTextBoxStyleKey}}" />
+            <Style TargetType="ListView" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogListViewStyleKey}}" />
+            <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogListViewItemGridStyleKey}}" />
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0">
+            <Label Content="imenu:" DockPanel.Dock="Left"/>
+            <TextBox Text="{Binding Text}" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+        </DockPanel>
+        <ListView Grid.Row="1" ItemsSource="{Binding ImenuItems}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
 </DataTemplate>
