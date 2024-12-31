@@ -39,7 +39,7 @@ namespace Imenu
             }
         }
 
-        private ObservableCollection<ImenuItem> _dataSouce = new ObservableCollection<ImenuItem>();
+        private List<ImenuItem> _dataSouce = new List<ImenuItem>();
 
         private ImenuItem? _selectedItem = null;
         [DataMember]
@@ -49,9 +49,9 @@ namespace Imenu
             set => SetProperty(ref this._selectedItem, value);
         }
 
-        private ObservableCollection<ImenuItem> _imenuItems = new ObservableCollection<ImenuItem>();
+        private List<ImenuItem> _imenuItems = new List<ImenuItem>();
         [DataMember]
-        public ObservableCollection<ImenuItem> ImenuItems
+        public List<ImenuItem> ImenuItems
         {
             get => _imenuItems;
             set => SetProperty(ref this._imenuItems, value);
@@ -80,7 +80,7 @@ namespace Imenu
             // 検索文字列がすべて含まれるアイテムをフィルタリング
             var filteredItems = this._dataSouce.Where(item => words.All(word => item.Name.Contains(word)));
 
-            this.ImenuItems = new ObservableCollection<ImenuItem>(filteredItems.ToList());
+            this.ImenuItems = filteredItems.ToList();
         }
     }
 }
