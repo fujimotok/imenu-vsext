@@ -1,6 +1,9 @@
-﻿using Microsoft.VisualStudio.Extensibility;
+﻿using EnvDTE;
+using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.ToolWindows;
 using Microsoft.VisualStudio.RpcContracts.RemoteUI;
+using Microsoft.VisualStudio.Shell;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,12 +15,12 @@ namespace Imenu
     [VisualStudioContribution]
     public class ToolWindow1 : ToolWindow
     {
-        private readonly ToolWindow1Content content = new();
+        private ToolWindow1Content? content;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolWindow1" /> class.
         /// </summary>
-        public ToolWindow1()
+        public ToolWindow1(IServiceProvider service)
         {
             this.Title = "My Tool Window";
         }
@@ -30,23 +33,28 @@ namespace Imenu
         };
 
         /// <inheritdoc />
-        public override Task InitializeAsync(CancellationToken cancellationToken)
+        public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
             // Use InitializeAsync for any one-time setup or initialization.
-            return Task.CompletedTask;
+
+            await base.InitializeAsync(cancellationToken);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            EnvDTE.DTE? dte = ServiceProvider.GlobalProvider.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+
+            this.content = new ToolWindow1Content(dte);
         }
 
         /// <inheritdoc />
         public override Task<IRemoteUserControl> GetContentAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult<IRemoteUserControl>(content);
+            return Task.FromResult<IRemoteUserControl>(this.content);
         }
 
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-                content.Dispose();
+                content?.Dispose();
 
             base.Dispose(disposing);
         }

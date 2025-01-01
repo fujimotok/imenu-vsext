@@ -1,9 +1,6 @@
 ﻿using Microsoft.VisualStudio.Extensibility.UI;
-using System;
-using System.Collections.ObjectModel;
+using Microsoft.VisualStudio.Shell;
 using System.Runtime.Serialization;
-using System.Windows;
-using System.Windows.Media;
 
 namespace Imenu
 {
@@ -13,8 +10,9 @@ namespace Imenu
     [DataContract]
     internal class ToolWindow1Data : NotifyPropertyChangedObject
     {
-        public ToolWindow1Data()
+        public ToolWindow1Data(EnvDTE.DTE? dte)
         {
+            this._dte = dte;
             this.JumpCommand = new AsyncCommand(this.JumpExecuteAsync);
             this._timer = new Timer((x) => { this.FilterItems(); }, null, 500, Timeout.Infinite);
 
@@ -25,6 +23,7 @@ namespace Imenu
             this.ImenuItems = this._dataSouce;
         }
 
+        private EnvDTE.DTE? _dte;
         private Timer _timer;
 
         private string _text = string.Empty;
@@ -35,7 +34,7 @@ namespace Imenu
             set
             {
                 SetProperty(ref this._text, value);
-                this._timer.Change(300, Timeout.Infinite);
+                this._timer.Change(500, Timeout.Infinite);
             }
         }
 
@@ -60,11 +59,20 @@ namespace Imenu
         [DataMember]
         public AsyncCommand JumpCommand { get; private set; }
 
-        private Task JumpExecuteAsync(object? parameter, CancellationToken token)
+        private async Task JumpExecuteAsync(object? parameter, CancellationToken token)
         {
-            MessageBox.Show($"hello! {SelectedItem?.Line ?? 0}");
+            var line = SelectedItem?.Line ?? 0;
 
-            return Task.CompletedTask;
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            if (this._dte == null)
+            {
+                return;
+            }
+
+            EnvDTE.Document? document = this._dte.ActiveDocument;
+            EnvDTE.TextSelection? textSelection = (EnvDTE.TextSelection)document?.Selection;
+            textSelection?.GotoLine(line, true);
         }
 
         private void FilterItems()

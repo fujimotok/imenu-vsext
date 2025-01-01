@@ -10,8 +10,8 @@ namespace Imenu
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolWindow1Content" /> class.
         /// </summary>
-        public ToolWindow1Content()
-            : base(dataContext: new ToolWindow1Data())
+        public ToolWindow1Content(EnvDTE.DTE? dte)
+            : base(dataContext: new ToolWindow1Data(dte))
         {
         }
     }
