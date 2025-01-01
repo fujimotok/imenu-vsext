@@ -22,7 +22,7 @@ namespace Imenu
         /// </summary>
         public ToolWindow1(IServiceProvider service)
         {
-            this.Title = "My Tool Window";
+            this.Title = "Imenu";
         }
 
         /// <inheritdoc />
