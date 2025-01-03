@@ -18,8 +18,7 @@ namespace Imenu
             this.JumpCommand = new AsyncCommand(this.JumpExecuteAsync);
             this._timer = new Timer((x) => { this.FilterItems(); }, null, 500, Timeout.Infinite);
 
-            this._dte.Events.DocumentEvents.DocumentOpened += this.OnDocumentChanged;
-            this._dte.Events.DocumentEvents.DocumentSaved += this.OnDocumentChanged;
+            this.InitializeDocumentEvents(this._dte);
         }
 
         private EnvDTE.DTE? _dte;
@@ -57,6 +56,19 @@ namespace Imenu
 
         [DataMember]
         public AsyncCommand JumpCommand { get; private set; }
+
+        private void InitializeDocumentEvents(EnvDTE.DTE? dte)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (dte == null)
+            {
+                return;
+            }
+
+            dte.Events.DocumentEvents.DocumentOpened += this.OnDocumentChanged;
+            dte.Events.DocumentEvents.DocumentSaved += this.OnDocumentChanged;
+        }
 
         private async void OnDocumentChanged(Document document)
         {
@@ -131,6 +143,8 @@ namespace Imenu
 
         private void FlattenCodeElements(CodeElement element, List<CodeElement> flattenedList)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             flattenedList.Add(element);
 
             // 再帰的にメンバーを取得
@@ -177,8 +191,10 @@ namespace Imenu
         }
 
         private ImenuItem CodeElementToImenuItem(CodeElement element)
-        {  
-            switch(element.Kind)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            switch (element.Kind)
             {
                 case vsCMElement.vsCMElementFunction:
                     var function = (CodeFunction)element;
