@@ -18,10 +18,11 @@ namespace Imenu
             this.JumpCommand = new AsyncCommand(this.JumpExecuteAsync);
             this._timer = new Timer((x) => { this.FilterItems(); }, null, 500, Timeout.Infinite);
 
-            this.InitializeDocumentEvents(this._dte);
+            this.InitializeWindowEvents(this._dte);
         }
 
         private EnvDTE.DTE? _dte;
+        private WindowEvents? _windowEvents;
         private Timer _timer;
 
         private string _text = string.Empty;
@@ -57,7 +58,7 @@ namespace Imenu
         [DataMember]
         public AsyncCommand JumpCommand { get; private set; }
 
-        private void InitializeDocumentEvents(EnvDTE.DTE? dte)
+        private void InitializeWindowEvents(EnvDTE.DTE? dte)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
@@ -66,17 +67,30 @@ namespace Imenu
                 return;
             }
 
-            dte.Events.DocumentEvents.DocumentOpened += this.OnDocumentChanged;
-            dte.Events.DocumentEvents.DocumentSaved += this.OnDocumentChanged;
+            // WindowEventsを保持しておかないとGCで解放されてしまうため、メンバー変数に保持
+            this._windowEvents = dte.Events.WindowEvents;
+            this._windowEvents.WindowActivated += OnWindowActivated;
         }
 
-        private async void OnDocumentChanged(Document document)
+        private async void OnWindowActivated(Window GotFocus, Window LostFocus)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+            if (GotFocus?.Document == null)
+            {
+                return;
+            }
+
+            await this.LoadImenuItemAsync(GotFocus.Document);
+        }
+
+        private async Task LoadImenuItemAsync(EnvDTE.Document document)
+        {
             try
             {
                 this._dataSouce.Clear();
+
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 var model = document.ProjectItem.FileCodeModel;
                 var elements = this.GetFlattenedCodeElements(model.CodeElements);
@@ -85,17 +99,19 @@ namespace Imenu
                 {
                     var item = this.CodeElementToImenuItem(element);
 
-                    if (item != null)
+                    if (item.Line != 0)
                     {
                         this._dataSouce.Add(item);
                     }
                 }
-
-                this.ImenuItems = new ObservableCollection<ImenuItem>(this._dataSouce);
             }
-            catch
+            catch (Exception e)
             {
-
+                Console.WriteLine($"Error {e}");
+            }
+            finally
+            {
+                this.ImenuItems = new ObservableCollection<ImenuItem>(this._dataSouce);
             }
         }
 
@@ -194,31 +210,39 @@ namespace Imenu
         {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            switch (element.Kind)
+            try
             {
-                case vsCMElement.vsCMElementFunction:
-                    var function = (CodeFunction)element;
-                    return new ImenuItem() { Name = function.Name, Line = function.StartPoint.Line };
-                case vsCMElement.vsCMElementProperty:
-                    var property = (CodeProperty)element;
-                    return new ImenuItem() { Name = property.Name, Line = property.StartPoint.Line };
-                case vsCMElement.vsCMElementVariable:
-                    var variable = (CodeVariable)element;
-                    return new ImenuItem() { Name = variable.Name, Line = variable.StartPoint.Line };
-                case vsCMElement.vsCMElementClass:
-                    var codeClass = (CodeClass)element;
-                    return new ImenuItem() { Name = codeClass.Name, Line = codeClass.StartPoint.Line };
-                case vsCMElement.vsCMElementStruct:
-                    var codeStruct = (CodeStruct)element;
-                    return new ImenuItem() { Name = codeStruct.Name, Line = codeStruct.StartPoint.Line };
-                case vsCMElement.vsCMElementInterface:
-                    var codeInterface = (CodeInterface)element;
-                    return new ImenuItem() { Name = codeInterface.Name, Line = codeInterface.StartPoint.Line };
-                case vsCMElement.vsCMElementNamespace:
-                    var codeNamespace = (CodeNamespace)element;
-                    return new ImenuItem() { Name = codeNamespace.Name, Line = codeNamespace.StartPoint.Line };
-                default:
-                    return null;
+
+                switch (element.Kind)
+                {
+                    case vsCMElement.vsCMElementFunction:
+                        var function = (CodeFunction)element;
+                        return new ImenuItem() { Name = function.Name, Line = function.StartPoint.Line };
+                    case vsCMElement.vsCMElementProperty:
+                        var property = (CodeProperty)element;
+                        return new ImenuItem() { Name = property.Name, Line = property.StartPoint.Line };
+                    case vsCMElement.vsCMElementVariable:
+                        var variable = (CodeVariable)element;
+                        return new ImenuItem() { Name = variable.Name, Line = variable.StartPoint.Line };
+                    case vsCMElement.vsCMElementClass:
+                        var codeClass = (CodeClass)element;
+                        return new ImenuItem() { Name = codeClass.Name, Line = codeClass.StartPoint.Line };
+                    case vsCMElement.vsCMElementStruct:
+                        var codeStruct = (CodeStruct)element;
+                        return new ImenuItem() { Name = codeStruct.Name, Line = codeStruct.StartPoint.Line };
+                    case vsCMElement.vsCMElementInterface:
+                        var codeInterface = (CodeInterface)element;
+                        return new ImenuItem() { Name = codeInterface.Name, Line = codeInterface.StartPoint.Line };
+                    case vsCMElement.vsCMElementNamespace:
+                        var codeNamespace = (CodeNamespace)element;
+                        return new ImenuItem() { Name = codeNamespace.Name, Line = codeNamespace.StartPoint.Line };
+                    default:
+                        return new ImenuItem() { Name = string.Empty, Line = 0 }; 
+                }
+            }
+            catch
+            {
+                return new ImenuItem() { Name = string.Empty, Line = 0 }; ;
             }
         }
 
