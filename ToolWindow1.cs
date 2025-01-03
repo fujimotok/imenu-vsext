@@ -20,7 +20,7 @@ namespace Imenu
         /// <summary>
         /// Initializes a new instance of the <see cref="ToolWindow1" /> class.
         /// </summary>
-        public ToolWindow1(IServiceProvider service)
+        public ToolWindow1()
         {
             this.Title = "Imenu";
         }

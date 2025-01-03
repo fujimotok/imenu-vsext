@@ -1,5 +1,7 @@
-﻿using Microsoft.VisualStudio.Extensibility.UI;
+﻿using EnvDTE;
+using Microsoft.VisualStudio.Extensibility.UI;
 using Microsoft.VisualStudio.Shell;
+using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 
 namespace Imenu
@@ -16,11 +18,8 @@ namespace Imenu
             this.JumpCommand = new AsyncCommand(this.JumpExecuteAsync);
             this._timer = new Timer((x) => { this.FilterItems(); }, null, 500, Timeout.Infinite);
 
-            this._dataSouce.Add(new ImenuItem() { Name = "hello", Line = 1 });
-            this._dataSouce.Add(new ImenuItem() { Name = "world", Line = 2 });
-            this._dataSouce.Add(new ImenuItem() { Name = "hello world", Line = 3 });
-
-            this.ImenuItems = this._dataSouce;
+            this._dte.Events.DocumentEvents.DocumentOpened += this.OnDocumentChanged;
+            this._dte.Events.DocumentEvents.DocumentSaved += this.OnDocumentChanged;
         }
 
         private EnvDTE.DTE? _dte;
@@ -48,9 +47,9 @@ namespace Imenu
             set => SetProperty(ref this._selectedItem, value);
         }
 
-        private List<ImenuItem> _imenuItems = new List<ImenuItem>();
+        private ObservableCollection<ImenuItem> _imenuItems = new ObservableCollection<ImenuItem>();
         [DataMember]
-        public List<ImenuItem> ImenuItems
+        public ObservableCollection<ImenuItem> ImenuItems
         {
             get => _imenuItems;
             set => SetProperty(ref this._imenuItems, value);
@@ -59,9 +58,38 @@ namespace Imenu
         [DataMember]
         public AsyncCommand JumpCommand { get; private set; }
 
+        private async void OnDocumentChanged(Document document)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            try
+            {
+                this._dataSouce.Clear();
+
+                var model = document.ProjectItem.FileCodeModel;
+                var elements = this.GetFlattenedCodeElements(model.CodeElements);
+
+                foreach (CodeElement element in elements)
+                {
+                    var item = this.CodeElementToImenuItem(element);
+
+                    if (item != null)
+                    {
+                        this._dataSouce.Add(item);
+                    }
+                }
+
+                this.ImenuItems = new ObservableCollection<ImenuItem>(this._dataSouce);
+            }
+            catch
+            {
+
+            }
+        }
+
         private async Task JumpExecuteAsync(object? parameter, CancellationToken token)
         {
-            var line = SelectedItem?.Line ?? 0;
+            var line = SelectedItem?.Line ?? 1;
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -79,7 +107,7 @@ namespace Imenu
         {
             if (string.IsNullOrEmpty(this.Text))
             {
-                this.ImenuItems = this._dataSouce;
+                this.ImenuItems = new ObservableCollection<ImenuItem>(this._dataSouce);
                 return;
             }
 
@@ -88,7 +116,95 @@ namespace Imenu
             // 検索文字列がすべて含まれるアイテムをフィルタリング
             var filteredItems = this._dataSouce.Where(item => words.All(word => item.Name.Contains(word)));
 
-            this.ImenuItems = filteredItems.ToList();
+            this.ImenuItems = new ObservableCollection<ImenuItem>(filteredItems.ToList());
         }
+
+        private List<CodeElement> GetFlattenedCodeElements(CodeElements codeElements)
+        {
+            List<CodeElement> flattenedList = new List<CodeElement>();
+            foreach (CodeElement element in codeElements)
+            {
+                FlattenCodeElements(element, flattenedList);
+            }
+            return flattenedList;
+        }
+
+        private void FlattenCodeElements(CodeElement element, List<CodeElement> flattenedList)
+        {
+            flattenedList.Add(element);
+
+            // 再帰的にメンバーを取得
+            if (element is CodeNamespace)
+            {
+                CodeNamespace codeNamespace = (CodeNamespace)element;
+                foreach (CodeElement child in codeNamespace.Members)
+                {
+                    FlattenCodeElements(child, flattenedList);
+                }
+            }
+            else if (element is CodeClass)
+            {
+                CodeClass codeClass = (CodeClass)element;
+                foreach (CodeElement child in codeClass.Members)
+                {
+                    FlattenCodeElements(child, flattenedList);
+                }
+            }
+            else if (element is CodeStruct)
+            {
+                CodeStruct codeStruct = (CodeStruct)element;
+                foreach (CodeElement child in codeStruct.Members)
+                {
+                    FlattenCodeElements(child, flattenedList);
+                }
+            }
+            else if (element is CodeInterface)
+            {
+                CodeInterface codeInterface = (CodeInterface)element;
+                foreach (CodeElement child in codeInterface.Members)
+                {
+                    FlattenCodeElements(child, flattenedList);
+                }
+            }
+            else if (element is CodeFunction)
+            {
+                CodeFunction codeFunction = (CodeFunction)element;
+                foreach (CodeElement child in codeFunction.Parameters)
+                {
+                    flattenedList.Add(child);
+                }
+            }
+        }
+
+        private ImenuItem CodeElementToImenuItem(CodeElement element)
+        {  
+            switch(element.Kind)
+            {
+                case vsCMElement.vsCMElementFunction:
+                    var function = (CodeFunction)element;
+                    return new ImenuItem() { Name = function.Name, Line = function.StartPoint.Line };
+                case vsCMElement.vsCMElementProperty:
+                    var property = (CodeProperty)element;
+                    return new ImenuItem() { Name = property.Name, Line = property.StartPoint.Line };
+                case vsCMElement.vsCMElementVariable:
+                    var variable = (CodeVariable)element;
+                    return new ImenuItem() { Name = variable.Name, Line = variable.StartPoint.Line };
+                case vsCMElement.vsCMElementClass:
+                    var codeClass = (CodeClass)element;
+                    return new ImenuItem() { Name = codeClass.Name, Line = codeClass.StartPoint.Line };
+                case vsCMElement.vsCMElementStruct:
+                    var codeStruct = (CodeStruct)element;
+                    return new ImenuItem() { Name = codeStruct.Name, Line = codeStruct.StartPoint.Line };
+                case vsCMElement.vsCMElementInterface:
+                    var codeInterface = (CodeInterface)element;
+                    return new ImenuItem() { Name = codeInterface.Name, Line = codeInterface.StartPoint.Line };
+                case vsCMElement.vsCMElementNamespace:
+                    var codeNamespace = (CodeNamespace)element;
+                    return new ImenuItem() { Name = codeNamespace.Name, Line = codeNamespace.StartPoint.Line };
+                default:
+                    return null;
+            }
+        }
+
     }
 }
