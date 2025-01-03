@@ -114,7 +114,7 @@ namespace Imenu
             var words = this.Text.Split(' ');
 
             // 検索文字列がすべて含まれるアイテムをフィルタリング
-            var filteredItems = this._dataSouce.Where(item => words.All(word => item.Name.Contains(word)));
+            var filteredItems = this._dataSouce.Where(item => words.All(word => item.Name.ToLower().Contains(word.ToLower())));
 
             this.ImenuItems = new ObservableCollection<ImenuItem>(filteredItems.ToList());
         }
