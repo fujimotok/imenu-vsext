@@ -24,7 +24,7 @@
             <Label Content="filter:" DockPanel.Dock="Left" />
             <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" DockPanel.Dock="Right" VerticalAlignment="Center" />
         </DockPanel>
-        <ListView Grid.Row="1" ItemsSource="{Binding ImenuItems}" SelectedItem="{Binding SelectedItem}">
+        <ListView Grid.Row="1" x:Name="list" ItemsSource="{Binding ImenuItems}" SelectedItem="{Binding SelectedItem}">
             <vs:ExtensibilityUICommands.EventHandlers>
                 <vs:EventHandlerCollection>
                     <vs:EventHandler Event="MouseDoubleClick"
@@ -33,7 +33,9 @@
             </vs:ExtensibilityUICommands.EventHandlers>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                    <GridViewColumn Header="Name"
+                                    DisplayMemberBinding="{Binding Name}"
+                                    Width="{Binding ActualWidth, ElementName=list}"/>
                 </GridView>
             </ListView.View>
         </ListView>
