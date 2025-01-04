@@ -94,16 +94,8 @@ namespace Imenu
 
                 var model = document.ProjectItem.FileCodeModel;
                 var elements = CodeElementsLogic.GetFlattenedCodeElements(model.CodeElements);
-
-                foreach (CodeElement element in elements)
-                {
-                    var item = CodeElementsLogic.CodeElementToImenuItem(element);
-
-                    if (item.Line != 0)
-                    {
-                        this._dataSouce.Add(item);
-                    }
-                }
+                this._dataSouce = elements.Select(element => new ImenuItem(element))
+                                          .Where(item => item.Line != 0).ToList();
             }
             catch (Exception e)
             {

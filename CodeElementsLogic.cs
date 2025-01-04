@@ -63,45 +63,5 @@ namespace Imenu
                 }
             }
         }
-
-        public static ImenuItem CodeElementToImenuItem(CodeElement element)
-        {
-            ThreadHelper.ThrowIfNotOnUIThread();
-
-            try
-            {
-                switch (element.Kind)
-                {
-                    case vsCMElement.vsCMElementFunction:
-                        var function = (CodeFunction)element;
-                        return new ImenuItem() { Name = function.Name, Line = function.StartPoint.Line };
-                    case vsCMElement.vsCMElementProperty:
-                        var property = (CodeProperty)element;
-                        return new ImenuItem() { Name = property.Name, Line = property.StartPoint.Line };
-                    case vsCMElement.vsCMElementVariable:
-                        var variable = (CodeVariable)element;
-                        return new ImenuItem() { Name = variable.Name, Line = variable.StartPoint.Line };
-                    case vsCMElement.vsCMElementClass:
-                        var codeClass = (CodeClass)element;
-                        return new ImenuItem() { Name = codeClass.Name, Line = codeClass.StartPoint.Line };
-                    case vsCMElement.vsCMElementStruct:
-                        var codeStruct = (CodeStruct)element;
-                        return new ImenuItem() { Name = codeStruct.Name, Line = codeStruct.StartPoint.Line };
-                    case vsCMElement.vsCMElementInterface:
-                        var codeInterface = (CodeInterface)element;
-                        return new ImenuItem() { Name = codeInterface.Name, Line = codeInterface.StartPoint.Line };
-                    case vsCMElement.vsCMElementNamespace:
-                        var codeNamespace = (CodeNamespace)element;
-                        return new ImenuItem() { Name = codeNamespace.Name, Line = codeNamespace.StartPoint.Line };
-                    default:
-                        return new ImenuItem() { Name = string.Empty, Line = 0 };
-                }
-            }
-            catch
-            {
-                return new ImenuItem() { Name = string.Empty, Line = 0 }; ;
-            }
-        }
-
     }
 }
